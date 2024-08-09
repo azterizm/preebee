@@ -1,0 +1,15 @@
+{
+  "name": "preebee",
+  "version": "1.0.0",
+  "description": "Database and container to all projects",
+  "main": "index.js",
+  "repository": "https://github.com/azterizm/preebee",
+  "author": "azterizm",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@prisma/client": "^5.15.0",
+    "prisma": "^5.15.0"
+  }
+}

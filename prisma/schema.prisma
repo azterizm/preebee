@@ -1,0 +1,259 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator seller-dashboard {
+  provider = "prisma-client-js"
+  output   = "../seller-dashboard/node_modules/.prisma/client"
+}
+
+model Shop {
+  id           String  @id @default(cuid())
+  name         String
+  title        String
+  description  String?
+  address      String?
+  phone        String?
+  layout       Int
+  color        String
+  logoFileName String?
+
+  active Boolean @default(true)
+  seller Seller?
+
+  products          Product[]
+  orders            Order[]
+  shippingFee       Float         @default(0)
+  socialMedia       SocialMedia[]
+  jazzCashAccounts  JazzCash[]
+  easyPaisaAccounts EasyPaisa[]
+  bankAccounts      BankAccount[]
+  categories        Category[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SocialMedia {
+  id        String   @id @default(cuid())
+  name      String
+  link      String
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Seller {
+  id             String         @id @default(cuid())
+  avatarURL      String?
+  avatarFileName String?
+  providerId     String?
+  providerName   String
+  email          String
+  name           String
+  passwordHash   String?        @db.LongText
+  passwordSalt   String?        @db.LongText
+  accessToken    String?        @db.LongText
+  refreshToken   String?        @db.LongText
+  phone          String?
+  shopId         String?        @unique
+  shop           Shop?          @relation(fields: [shopId], references: [id])
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  notifications  Notification[]
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  new         Boolean  @default(true)
+  actionLabel String?
+  actionLink  String?
+  sellerId    String
+  seller      Seller   @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Product {
+  id             String         @id @default(cuid())
+  title          String         @db.MediumText
+  price          Float          @default(0)
+  stockAvailable Int            @default(0)
+  description    String?        @db.LongText
+  reviews        Review[]
+  categories     Category[]
+  averageReview  Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  isActive       Boolean        @default(true)
+  orderItems     OrderItem[]
+  images         ProductImage[]
+  shopId         String
+  shop           Shop           @relation(fields: [shopId], references: [id])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  fileName  String
+  fileSize  Int
+  fileType  String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  products  Product[]
+  shopId    String
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Review {
+  id        String        @id @default(cuid())
+  stars     Int
+  ip        String
+  isPublic  Boolean       @default(true)
+  name      String
+  message   String        @db.LongText
+  productId String
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images    ReviewImage[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model ReviewImage {
+  id        String   @id @default(cuid())
+  fileName  String
+  fileSize  Int
+  fileType  String
+  reviewId  String
+  review    Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  password  String
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id             String           @id @default(cuid())
+  total          Float
+  shippingFee    Float            @default(0)
+  status         OrderStatus      @default(PENDING)
+  message        String?
+  checked        Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  shopId         String
+  shop           Shop             @relation(fields: [shopId], references: [id])
+  deliveryInfo   DeliveryInfo     @relation(fields: [deliveryInfoId], references: [id])
+  deliveryInfoId String
+  invoiceId      String
+  invoice        Invoice          @relation(fields: [invoiceId], references: [id])
+  payments       AdvancePayment[]
+  items          OrderItem[]
+}
+
+model AdvancePayment {
+  id        String      @id @default(cuid())
+  amount    Float
+  type      PaymentType
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model DeliveryInfo {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  address   String
+  city      String
+  province  String
+  ip        String
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  quantity  Int
+  price     Float
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JazzCash {
+  id        String   @id @default(cuid())
+  number    String
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EasyPaisa {
+  id        String   @id @default(cuid())
+  number    String
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BankAccount {
+  id         String                @id @default(cuid())
+  number     String
+  numberType BankAccountNumberType
+  bankName   String
+  name       String
+  email      String
+  phone      String
+  shopId     String
+  shop       Shop                  @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+}
+
+enum BankAccountNumberType {
+  IBAN
+  AccountNumber
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentType {
+  JAZZCASH
+  EASYPAISA
+  BANK
+}
